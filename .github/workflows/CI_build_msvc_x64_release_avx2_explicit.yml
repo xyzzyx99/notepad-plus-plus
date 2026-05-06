@@ -1,4 +1,4 @@
-name: CI_build
+name: CI_build_msvc_x64_release_avx2_explicit
 
 on:
   workflow_dispatch:
