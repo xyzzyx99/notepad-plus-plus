@@ -1,0 +1,39 @@
+name: CI_build_msvc_x64_release_only
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  build_windows_x64:
+    name: MSVC x64 Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v3
+
+      - name: Modify resource.h N++ version to avoid confusion
+        working-directory: PowerEditor\src\
+        shell: pwsh
+        run: |
+          $content = Get-Content -Path 'resource.h'
+          $newContent = $content -replace 'TEXT\(\"Notepad\+\+ v.*\"\)', 'TEXT("Notepad++ GH_BUILD")'
+          $newContent | Set-Content -Path 'resource.h'
+
+      - name: Build Notepad++ x64
+        working-directory: PowerEditor\visual.net\
+        shell: pwsh
+        run: |
+          msbuild notepadPlus.sln /m /p:Configuration="Release" /p:Platform="x64" /p:PlatformToolset="v143"
+
+      - name: Upload x64 Release artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Notepad++.MSVC.x64.Release
+          path: PowerEditor\bin64\Notepad++.exe
+          if-no-files-found: error
